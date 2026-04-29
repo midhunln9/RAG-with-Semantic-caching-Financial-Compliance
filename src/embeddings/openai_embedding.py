@@ -1,6 +1,7 @@
 from typing import List
 from src.strategies.dense_embeddings import DenseEmbeddingStrategy
 from openai import AsyncOpenAI
+from langchain_core.documents import Document
 import os
 
 
@@ -24,3 +25,12 @@ class OpenAIEmbedding(DenseEmbeddingStrategy):
         )
 
         return embedding_query.data[0].embedding
+    
+    async def embed_documents(self, documents: List[Document]) -> List[List[float]]:
+        extract_content = [doc.page_content for doc in documents]
+
+        embedding_docs = await self.client.embeddings.create(
+            model=self.model_name,
+            input=extract_content
+        )
+        return [item.embedding for item in embedding_docs.data]
