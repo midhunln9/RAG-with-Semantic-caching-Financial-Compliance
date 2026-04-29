@@ -35,7 +35,7 @@ async def start_shut(app):
     logger.info("Starting application initialization")
 
     # LLM
-    llm = get_llm_strategy("openai")
+    llm = get_llm_strategy("nvidia")
 
     # Embeddings
     dense_embedding = OpenAIEmbedding()
