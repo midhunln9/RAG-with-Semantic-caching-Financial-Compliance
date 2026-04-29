@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from loguru import logger
@@ -9,13 +11,14 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     payload: str
     session_id: str
+    llm: Literal["openai", "nvidia"]
 
 
 @router.post("/chat")
 async def chat(chat_request: ChatRequest, request: Request):
-    workflow = request.app.state.graph
+    workflow = request.app.state.graphs[chat_request.llm]
     logger.info(
-        f"/chat received session_id={chat_request.session_id} "
+        f"/chat received llm={chat_request.llm} session_id={chat_request.session_id} "
         f"payload={chat_request.payload!r}"
     )
 
@@ -32,7 +35,8 @@ async def chat(chat_request: ChatRequest, request: Request):
                     yield chunk.content
         except Exception as e:
             logger.exception(
-                f"Workflow stream failed for session_id={chat_request.session_id}: {e}"
+                f"Workflow stream failed for llm={chat_request.llm} "
+                f"session_id={chat_request.session_id}: {e}"
             )
             raise
 

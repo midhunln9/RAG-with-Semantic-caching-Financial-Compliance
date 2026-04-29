@@ -4,10 +4,11 @@ import requests
 import streamlit as st
 
 BACKEND_CHAT_URL = "http://127.0.0.1:8000/chat"
+AVAILABLE_LLMS = ["nvidia", "openai"]
 
 
-def stream_chat_response(session_id: str, prompt: str, backend_url: str):
-    payload = {"session_id": session_id, "payload": prompt}
+def stream_chat_response(session_id: str, prompt: str, llm: str, backend_url: str):
+    payload = {"session_id": session_id, "payload": prompt, "llm": llm}
 
     with requests.post(
         backend_url,
@@ -32,16 +33,29 @@ if "session_id" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+if "selected_llm" not in st.session_state:
+    st.session_state.selected_llm = "nvidia"
+
 with st.sidebar:
     st.subheader("Connection")
     backend_url = st.text_input("Backend chat URL", value=BACKEND_CHAT_URL)
     session_id = st.text_input("Session ID", value=st.session_state.session_id)
+    selected_llm = st.selectbox(
+        "LLM Provider",
+        AVAILABLE_LLMS,
+        index=AVAILABLE_LLMS.index(st.session_state.selected_llm),
+        help="Choose which LLM to use for the next request.",
+    )
 
     if session_id != st.session_state.session_id:
         st.session_state.session_id = session_id
 
-    if st.button("Generate New Session ID"):
+    if selected_llm != st.session_state.selected_llm:
+        st.session_state.selected_llm = selected_llm
+
+    if st.button("Start New Conversation"):
         st.session_state.session_id = str(uuid.uuid4())
+        st.session_state.messages = []
         st.rerun()
 
 for message in st.session_state.messages:
@@ -61,6 +75,7 @@ if prompt:
             response_stream = stream_chat_response(
                 session_id=st.session_state.session_id,
                 prompt=prompt,
+                llm=st.session_state.selected_llm,
                 backend_url=backend_url,
             )
             full_response = st.write_stream(response_stream)

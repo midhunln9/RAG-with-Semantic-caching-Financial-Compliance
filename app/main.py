@@ -34,9 +34,6 @@ async def start_shut(app):
     )
     logger.info("Starting application initialization")
 
-    # LLM
-    llm = get_llm_strategy("nvidia")
-
     # Embeddings
     dense_embedding = OpenAIEmbedding()
     sparse_embedding = SentenceTransformerSparseEmbedding()
@@ -56,11 +53,14 @@ async def start_shut(app):
     conversation_db = ConversationDB(database_url)
     await conversation_db.connect()
 
-    # Service + nodes + graph
-    rag_service = RagWorkflowService(llm_strategy=llm, vector_db=vector_store)
-    nodes = Nodes(rag_service=rag_service, conversation_db=conversation_db)
-    graph = Graph(nodes=nodes)
-    app.state.graph = graph.build_graph()
+    # LLM workflows
+    app.state.graphs = {}
+    for llm_name in ("nvidia", "openai"):
+        llm = get_llm_strategy(llm_name)
+        rag_service = RagWorkflowService(llm_strategy=llm, vector_db=vector_store)
+        nodes = Nodes(rag_service=rag_service, conversation_db=conversation_db)
+        graph = Graph(nodes=nodes)
+        app.state.graphs[llm_name] = graph.build_graph()
 
     logger.info("Application initialization complete")
 
