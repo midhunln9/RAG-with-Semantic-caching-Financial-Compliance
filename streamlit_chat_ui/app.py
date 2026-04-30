@@ -4,7 +4,7 @@ import requests
 import streamlit as st
 
 BACKEND_CHAT_URL = "http://127.0.0.1:8000/chat"
-AVAILABLE_LLMS = ["nvidia", "openai"]
+AVAILABLE_LLMS = ["nvidia"] # ["nvidia", "openai"]
 
 
 def stream_chat_response(session_id: str, prompt: str, llm: str, backend_url: str):
@@ -80,15 +80,10 @@ if prompt:
             )
             full_response = st.write_stream(response_stream)
         except requests.HTTPError as exc:
-            full_response = (
-                f"Backend returned HTTP {exc.response.status_code}: "
-                f"{exc.response.text}"
-            )
+            full_response = f"Backend returned HTTP {exc.response.status_code}: {exc.response.text}"
             st.error(full_response)
         except requests.RequestException as exc:
             full_response = f"Request failed: {exc}"
             st.error(full_response)
 
-    st.session_state.messages.append(
-        {"role": "assistant", "content": full_response}
-    )
+    st.session_state.messages.append({"role": "assistant", "content": full_response})

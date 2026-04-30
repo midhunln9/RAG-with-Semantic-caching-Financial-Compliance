@@ -7,17 +7,17 @@ from fastapi import FastAPI
 from loguru import logger
 
 from app.routes.chat import router as chat_router
-from src.configs.pinecone_config import PineconeConfig
-from src.embeddings.openai_embedding import OpenAIEmbedding
-from src.embeddings.splade_sparse_embedding import (
+from rag_src.configs.pinecone_config import PineconeConfig
+from rag_src.embeddings.openai_embedding import OpenAIEmbedding
+from rag_src.embeddings.splade_sparse_embedding import (
     SentenceTransformerSparseEmbedding,
 )
-from src.graph import Graph
-from src.llm.llm_factory import get_llm_strategy
-from src.nodes import Nodes
-from src.repositories.conversation_db import ConversationDB
-from src.repositories.pinecone_repository import PineconeRepository
-from src.services import RagWorkflowService
+from rag_src.graph import Graph
+from rag_src.llm.llm_factory import get_llm_strategy
+from rag_src.nodes import Nodes
+from rag_src.repositories.conversation_db import ConversationDB
+from rag_src.repositories.pinecone_repository import PineconeRepository
+from rag_src.services import RagWorkflowService
 
 load_dotenv(find_dotenv())
 
