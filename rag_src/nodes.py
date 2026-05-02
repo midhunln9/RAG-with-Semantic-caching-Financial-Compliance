@@ -3,6 +3,7 @@ from loguru import logger
 
 from rag_src.prompts.final_answer_prompt import FINAL_ANSWER_PROMPT
 from rag_src.prompts.rewrite_prompt import QUERY_REWRITE_PROMPT
+from rag_src.protocols.cache import CacheProtocol
 from rag_src.repositories.conversation_db import ConversationDB
 from rag_src.schemas.rewrite_query_json_call import RewriteQueryJsonCall
 from rag_src.services import RagWorkflowService
@@ -14,9 +15,11 @@ class Nodes:
         self,
         rag_service: RagWorkflowService,
         conversation_db: ConversationDB,
+        cache: CacheProtocol | None = None,
     ):
         self.rag_service = rag_service
         self.conversation_db = conversation_db
+        self.cache = cache
 
     async def rewrite_query(self, state: AgentState) -> dict:
         query = state["query"]
@@ -34,6 +37,42 @@ class Nodes:
         logger.info(f"[rewrite_query] rewritten_query={rewritten_query!r}")
         return {"rewritten_query": rewritten_query}
 
+    async def check_cache(self, state: AgentState) -> dict:
+        cache_key = state["rewritten_query"]
+        session_id = state["session_id"]
+
+        if self.cache is None:
+            logger.info(
+                f"[check_cache] cache disabled; treating as miss for session_id={session_id}"
+            )
+            return {"cache_key": cache_key, "cache_hit": False}
+
+        try:
+            cached_answer = self.cache.get(cache_key)
+        except Exception as e:
+            if hasattr(self.cache, "mark_backend_unavailable"):
+                self.cache.mark_backend_unavailable("lookup", e)
+            logger.warning(
+                "[check_cache] cache lookup failed for "
+                f"session_id={session_id} key={cache_key!r}: {e}"
+            )
+            return {"cache_key": cache_key, "cache_hit": False}
+
+        if cached_answer is None:
+            logger.info(f"[check_cache] miss for session_id={session_id} key={cache_key!r}")
+            return {"cache_key": cache_key, "cache_hit": False}
+
+        logger.info(f"[check_cache] hit for session_id={session_id} key={cache_key!r}")
+        return {
+            "cache_key": cache_key,
+            "cache_hit": True,
+            "cached_answer": cached_answer,
+        }
+
+    async def cache_miss(self, state: AgentState) -> dict:
+        logger.info(f"[cache_miss] continuing RAG workflow for session_id={state['session_id']}")
+        return {}
+
     async def retrieve_documents(self, state: AgentState) -> dict:
         rewritten_query = state["rewritten_query"]
         logger.info(f"[retrieve_documents] querying for {rewritten_query!r}")
@@ -47,6 +86,16 @@ class Nodes:
         past_conversations = await self.conversation_db.get_last_messages(session_id, limit=10)
         logger.info(f"[get_conversations] fetched {len(past_conversations)} past messages")
         return {"past_conversations": past_conversations}
+
+    async def return_cached_answer(self, state: AgentState) -> dict:
+        session_id = state["session_id"]
+        cached_answer = state["cached_answer"]
+        logger.info(f"[return_cached_answer] returning cached answer for session_id={session_id}")
+
+        # Save the assistant's reply so follow-up turns still see full history.
+        await self.conversation_db.save_ai_message(session_id, cached_answer)
+
+        return {"final_answer": cached_answer}
 
     async def rag_answer(self, state: AgentState) -> dict:
         session_id = state["session_id"]
@@ -83,3 +132,27 @@ class Nodes:
         await self.conversation_db.save_ai_message(session_id, final_answer)
 
         return {"final_answer": final_answer}
+
+    async def store_answer_in_cache(self, state: AgentState) -> dict:
+        if self.cache is None:
+            return {}
+
+        cache_key = state.get("cache_key", state["rewritten_query"])
+        final_answer = state["final_answer"]
+        session_id = state["session_id"]
+
+        try:
+            self.cache.set(cache_key, final_answer)
+            logger.info(
+                "[store_answer_in_cache] cached answer for "
+                f"session_id={session_id} key={cache_key!r}"
+            )
+        except Exception as e:
+            if hasattr(self.cache, "mark_backend_unavailable"):
+                self.cache.mark_backend_unavailable("write", e)
+            logger.warning(
+                f"[store_answer_in_cache] cache write failed for session_id={session_id} "
+                f"key={cache_key!r}: {e}"
+            )
+
+        return {}

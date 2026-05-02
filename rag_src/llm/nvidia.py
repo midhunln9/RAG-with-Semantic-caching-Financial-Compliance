@@ -9,13 +9,18 @@ from rag_src.strategies.llm_strategy import LLMStrategy
 
 class NVIDIALLM(LLMStrategy):
     def __init__(self):
+        self.model_name = "meta/llama-3.3-70b-instruct"
         self.client = ChatNVIDIA(
             api_key=os.getenv("NVIDIA_API_KEY"),
-            model="meta/llama-3.3-70b-instruct",
+            model=self.model_name,
             temperature=0.2,
             top_p=0.7,
             max_tokens=1024,
         )
+
+    @property
+    def cache_llm_string(self) -> str:
+        return f"rag_pipeline:v1:nvidia:{self.model_name}"
 
     async def generate_response(
         self, prompt: str, response_class: type[BaseModel] | None = None

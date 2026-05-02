@@ -1,3 +1,5 @@
+import os
+
 import asyncpg
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from loguru import logger
@@ -10,9 +12,32 @@ class ConversationDB:
     def __init__(self, database_url: str):
         self.database_url = database_url
         self.pool: asyncpg.Pool | None = None
+        self.pool_min_size = self._get_pool_size("DATABASE_POOL_MIN_SIZE", default=1)
+        self.pool_max_size = self._get_pool_size("DATABASE_POOL_MAX_SIZE", default=10)
+        if self.pool_min_size > self.pool_max_size:
+            raise ValueError(
+                "DATABASE_POOL_MIN_SIZE cannot be greater than DATABASE_POOL_MAX_SIZE"
+            )
+
+    @staticmethod
+    def _get_pool_size(env_var: str, default: int) -> int:
+        raw_value = os.getenv(env_var, str(default))
+        try:
+            value = int(raw_value)
+        except ValueError as exc:
+            raise ValueError(f"{env_var} must be an integer, got {raw_value!r}") from exc
+
+        if value < 1:
+            raise ValueError(f"{env_var} must be >= 1, got {value}")
+        return value
 
     async def connect(self) -> None:
-        self.pool = await asyncpg.create_pool(dsn=self.database_url)
+        # asyncpg eagerly opens min_size connections during pool creation.
+        self.pool = await asyncpg.create_pool(
+            dsn=self.database_url,
+            min_size=self.pool_min_size,
+            max_size=self.pool_max_size,
+        )
         async with self.pool.acquire() as conn:
             await conn.execute(
                 """
@@ -26,7 +51,10 @@ class ConversationDB:
             await conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_messages_session ON messages (session_id)"
             )
-        logger.info("Connected to Postgres; messages table ready")
+        logger.info(
+            "Connected to Postgres; messages table ready "
+            f"(pool min={self.pool_min_size}, max={self.pool_max_size})"
+        )
 
     async def close(self) -> None:
         if self.pool is not None:

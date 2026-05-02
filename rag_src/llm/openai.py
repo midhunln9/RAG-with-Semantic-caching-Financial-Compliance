@@ -9,11 +9,16 @@ from rag_src.strategies.llm_strategy import LLMStrategy
 
 class OpenAILLM(LLMStrategy):
     def __init__(self):
+        self.model_name = "gpt-4o-mini"
         self.client = ChatOpenAI(
             api_key=os.getenv("OPENAI_API_KEY"),
-            model="gpt-4o-mini",
+            model=self.model_name,
             streaming=True,
         )
+
+    @property
+    def cache_llm_string(self) -> str:
+        return f"rag_pipeline:v1:openai:{self.model_name}"
 
     async def generate_response(
         self, prompt: str, response_class: type[BaseModel] | None = None

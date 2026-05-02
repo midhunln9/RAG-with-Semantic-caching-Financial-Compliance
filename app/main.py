@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from loguru import logger
 
 from app.routes.chat import router as chat_router
+from rag_src.configs.langcache_config import RedisConfig
 from rag_src.configs.pinecone_config import PineconeConfig
 from rag_src.embeddings.openai_embedding import OpenAIEmbedding
 from rag_src.embeddings.splade_sparse_embedding import (
@@ -16,6 +17,7 @@ from rag_src.graph import Graph
 from rag_src.llm.llm_factory import get_llm_strategy
 from rag_src.nodes import Nodes
 from rag_src.repositories.conversation_db import ConversationDB
+from rag_src.repositories.lang_cache import RedisLangCache
 from rag_src.repositories.pinecone_repository import PineconeRepository
 from rag_src.services import RagWorkflowService
 
@@ -58,7 +60,18 @@ async def start_shut(app):
     for llm_name in ("nvidia", "openai"):
         llm = get_llm_strategy(llm_name)
         rag_service = RagWorkflowService(llm_strategy=llm, vector_db=vector_store)
-        nodes = Nodes(rag_service=rag_service, conversation_db=conversation_db)
+        redis_config = RedisConfig.from_env(llm.cache_llm_string)
+        cache = RedisLangCache(redis_config) if redis_config else None
+        if cache is None:
+            logger.info(f"LangCache disabled for llm={llm_name}; missing Redis configuration")
+        else:
+            logger.info(f"LangCache enabled for llm={llm_name}")
+
+        nodes = Nodes(
+            rag_service=rag_service,
+            conversation_db=conversation_db,
+            cache=cache,
+        )
         graph = Graph(nodes=nodes)
         app.state.graphs[llm_name] = graph.build_graph()
 

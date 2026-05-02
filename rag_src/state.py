@@ -1,13 +1,16 @@
-from typing import TypedDict
+from typing import NotRequired, Required, TypedDict
 
 from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage
 
 
 class AgentState(TypedDict):
-    query: str
-    session_id: str
-    rewritten_query: str
-    retrieved_docs: list[Document]
-    past_conversations: list[BaseMessage]
-    final_answer: str
+    query: Required[str]
+    session_id: Required[str]
+    rewritten_query: NotRequired[str]
+    cache_key: NotRequired[str]
+    cache_hit: NotRequired[bool]
+    cached_answer: NotRequired[str]
+    retrieved_docs: NotRequired[list[Document]]
+    past_conversations: NotRequired[list[BaseMessage]]
+    final_answer: NotRequired[str]

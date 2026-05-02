@@ -1,0 +1,5 @@
+*
+!pyproject.toml
+!uv.lock
+!streamlit_chat_ui/
+!streamlit_chat_ui/**

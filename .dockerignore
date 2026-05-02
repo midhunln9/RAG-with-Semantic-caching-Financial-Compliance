@@ -1,0 +1,16 @@
+.git
+.gitignore
+.venv
+.uv-cache/
+.python-version
+.env
+.env.*
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+logs/
+.DS_Store

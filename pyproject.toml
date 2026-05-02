@@ -4,30 +4,47 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "asyncpg>=0.30.0",
-    "fastapi>=0.136.1",
-    "langchain>=1.2.15",
-    "langchain-openai>=1.2.0",
-    "langgraph>=1.1.9",
-    "loguru>=0.7.3",
-    "pandas>=3.0.2",
-    "pinecone>=8.1.2",
-    "requests>=2.32.5",
-    "python-dotenv>=1.2.2",
-    "sentence-transformers>=5.4.1",
-    "streamlit>=1.49.0",
-    "uvicorn>=0.46.0",
-    "langchain-nvidia-ai-endpoints>=1.2.1",
-    "langchain-community>=0.4.1",
-    "pypdf>=6.10.2",
-    "ranx>=0.3.20",
-]
+dependencies = []
 
 [dependency-groups]
+rag_shared = [
+    "langchain>=1.2.15",
+    "langchain-nvidia-ai-endpoints>=1.2.1",
+    "langchain-openai>=1.2.0",
+    "loguru>=0.7.3",
+    "pinecone>=8.1.2",
+    "python-dotenv>=1.2.2",
+    "sentence-transformers>=5.4.1",
+]
+backend = [
+    { include-group = "rag_shared" },
+    "asyncpg>=0.30.0",
+    "fastapi>=0.136.1",
+    "langcache>=0.12.0",
+    "langgraph>=1.1.9",
+    "redisvl>=0.18.1",
+    "uvicorn>=0.46.0",
+]
+frontend = [
+    "requests>=2.32.5",
+    "streamlit>=1.49.0",
+]
+ingestion = [
+    { include-group = "rag_shared" },
+    "langchain-community>=0.4.1",
+    "pypdf>=6.10.2",
+]
+evaluation = [
+    { include-group = "rag_shared" },
+    "pandas>=3.0.2",
+    "ranx>=0.3.20",
+]
 dev = [
     "ruff>=0.15.12",
 ]
+
+[tool.uv]
+default-groups = "all"
 
 [tool.ruff]
 target-version = "py312"

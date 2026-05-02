@@ -23,16 +23,35 @@ async def chat(chat_request: ChatRequest, request: Request):
     )
 
     async def generate():
+        rag_answer_streamed = False
         try:
-            async for chunk, metadata in workflow.astream(
+            async for mode, data in workflow.astream(
                 {
                     "query": chat_request.payload,
                     "session_id": chat_request.session_id,
                 },
-                stream_mode="messages",
+                stream_mode=["messages", "updates"],
             ):
-                if metadata.get("langgraph_node") == "rag_answer":
-                    yield chunk.content
+                if mode == "messages":
+                    chunk, metadata = data
+                    if metadata.get("langgraph_node") == "rag_answer":
+                        rag_answer_streamed = True
+                        yield chunk.content
+                    continue
+
+                if mode != "updates":
+                    continue
+
+                if "return_cached_answer" in data:
+                    final_answer = data["return_cached_answer"].get("final_answer")
+                    if final_answer:
+                        yield final_answer
+                    continue
+
+                if not rag_answer_streamed and "rag_answer" in data:
+                    final_answer = data["rag_answer"].get("final_answer")
+                    if final_answer:
+                        yield final_answer
         except Exception as e:
             logger.exception(
                 f"Workflow stream failed for llm={chat_request.llm} "
