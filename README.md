@@ -48,7 +48,7 @@ The ingestion pipeline in `DocumentIngestion/` loads every PDF in `documents/`, 
 
 ### 2. Online request handling
 
-The serving path starts in the Streamlit client, reaches FastAPI through `POST /chat`, and is orchestrated by a LangGraph workflow. The graph rewrites the incoming query, checks semantic cache, retrieves relevant documents on cache miss, loads recent conversation history, and generates the final answer with the selected LLM.
+The serving path starts in the Streamlit client, reaches FastAPI through `POST /chat`, and is orchestrated by a LangGraph workflow. The graph first runs an input topicality guard backed by Guardrails AI and the NVIDIA chat model. If the prompt is off-topic, the workflow short-circuits with a fixed response. If the prompt is on-topic, the workflow rewrites the incoming query, checks semantic cache, retrieves relevant documents on cache miss, loads recent conversation history, and generates the final answer with the selected LLM.
 
 ### 3. Stateful conversations
 
@@ -67,7 +67,8 @@ When LangCache is configured, the rewritten query becomes the cache key. If a se
 
 Read the request flow like this:
 
-- Shared preprocessing happens first for every request: accept the question, save the user turn, rewrite the query, and check cache.
+- Shared preprocessing happens first for every request: accept the question, run the financial-compliance topicality guard, and either stop early or continue into rewrite and cache lookup.
+- On-topic requests save the user turn after the guard passes, rewrite the query, and check cache.
 - Cache-hit requests return immediately after loading the cached answer and persisting the assistant reply.
 - Cache-miss requests fan out into retrieval and history loading, then join for grounded answer generation and cache write-back.
 
@@ -239,6 +240,7 @@ Accepted `llm` values:
 Behavior:
 
 - response body is streamed as plain text
+- off-topic prompts are short-circuited with `Kindly stick to the concept of financial compliance`
 - recent conversation history is used for continuity
 - cached answers are returned immediately when semantic cache hits
 

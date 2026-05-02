@@ -14,6 +14,7 @@ from rag_src.embeddings.splade_sparse_embedding import (
     SentenceTransformerSparseEmbedding,
 )
 from rag_src.graph import Graph
+from rag_src.guardrails import FinancialComplianceGuardrail
 from rag_src.llm.llm_factory import get_llm_strategy
 from rag_src.nodes import Nodes
 from rag_src.repositories.conversation_db import ConversationDB
@@ -57,6 +58,7 @@ async def start_shut(app):
 
     # LLM workflows
     app.state.graphs = {}
+    topic_guardrail = FinancialComplianceGuardrail(get_llm_strategy("nvidia"))
     for llm_name in ("nvidia", "openai"):
         llm = get_llm_strategy(llm_name)
         rag_service = RagWorkflowService(llm_strategy=llm, vector_db=vector_store)
@@ -70,6 +72,7 @@ async def start_shut(app):
         nodes = Nodes(
             rag_service=rag_service,
             conversation_db=conversation_db,
+            topic_guardrail=topic_guardrail,
             cache=cache,
         )
         graph = Graph(nodes=nodes)

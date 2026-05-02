@@ -10,7 +10,11 @@ class Graph:
         self.graph = StateGraph(AgentState)
 
     def build_graph(self):
-        # Rewrite first so the cache key is based on the normalized query.
+        self.graph.add_node("guard_prompt", self.nodes.guard_prompt)
+        self.graph.add_node("return_off_topic_response", self.nodes.return_off_topic_response)
+
+        # After the topicality guard passes, rewrite so the cache key is
+        # based on the normalized query.
         self.graph.add_node("rewrite_query", self.nodes.rewrite_query)
         self.graph.add_node("check_cache", self.nodes.check_cache)
         self.graph.add_node("return_cached_answer", self.nodes.return_cached_answer)
@@ -22,7 +26,17 @@ class Graph:
         self.graph.add_node("rag_answer", self.nodes.rag_answer)
         self.graph.add_node("store_answer_in_cache", self.nodes.store_answer_in_cache)
 
-        self.graph.add_edge(START, "rewrite_query")
+        self.graph.add_edge(START, "guard_prompt")
+        self.graph.add_conditional_edges(
+            "guard_prompt",
+            self._route_after_topic_guard,
+            {
+                "on_topic": "rewrite_query",
+                "off_topic": "return_off_topic_response",
+            },
+        )
+
+        self.graph.add_edge("return_off_topic_response", END)
         self.graph.add_edge("rewrite_query", "check_cache")
         self.graph.add_conditional_edges(
             "check_cache",
@@ -45,3 +59,7 @@ class Graph:
     @staticmethod
     def _route_after_cache_lookup(state: AgentState) -> str:
         return "cache_hit" if state.get("cache_hit", False) else "cache_miss"
+
+    @staticmethod
+    def _route_after_topic_guard(state: AgentState) -> str:
+        return "on_topic" if state.get("is_on_topic", False) else "off_topic"

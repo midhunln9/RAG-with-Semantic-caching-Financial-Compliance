@@ -42,16 +42,15 @@ async def chat(chat_request: ChatRequest, request: Request):
                 if mode != "updates":
                     continue
 
-                if "return_cached_answer" in data:
-                    final_answer = data["return_cached_answer"].get("final_answer")
+                for node_name, node_update in data.items():
+                    if node_name == "rag_answer" and rag_answer_streamed:
+                        continue
+                    if not isinstance(node_update, dict):
+                        continue
+                    final_answer = node_update.get("final_answer")
                     if final_answer:
                         yield final_answer
-                    continue
-
-                if not rag_answer_streamed and "rag_answer" in data:
-                    final_answer = data["rag_answer"].get("final_answer")
-                    if final_answer:
-                        yield final_answer
+                        break
         except Exception as e:
             logger.exception(
                 f"Workflow stream failed for llm={chat_request.llm} "

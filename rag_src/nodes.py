@@ -1,6 +1,10 @@
 from langchain_core.messages import HumanMessage
 from loguru import logger
 
+from rag_src.guardrails import (
+    FINANCIAL_COMPLIANCE_OFF_TOPIC_RESPONSE,
+    FinancialComplianceGuardrail,
+)
 from rag_src.prompts.final_answer_prompt import FINAL_ANSWER_PROMPT
 from rag_src.prompts.rewrite_prompt import QUERY_REWRITE_PROMPT
 from rag_src.protocols.cache import CacheProtocol
@@ -15,11 +19,26 @@ class Nodes:
         self,
         rag_service: RagWorkflowService,
         conversation_db: ConversationDB,
+        topic_guardrail: FinancialComplianceGuardrail,
         cache: CacheProtocol | None = None,
     ):
         self.rag_service = rag_service
         self.conversation_db = conversation_db
+        self.topic_guardrail = topic_guardrail
         self.cache = cache
+
+    async def guard_prompt(self, state: AgentState) -> dict:
+        query = state["query"]
+        session_id = state["session_id"]
+        logger.info(f"[guard_prompt] session_id={session_id} query={query!r}")
+
+        decision = await self.topic_guardrail.evaluate(query)
+        return {"is_on_topic": decision.is_on_topic}
+
+    async def return_off_topic_response(self, state: AgentState) -> dict:
+        session_id = state["session_id"]
+        logger.info(f"[return_off_topic_response] blocked session_id={session_id}")
+        return {"final_answer": FINANCIAL_COMPLIANCE_OFF_TOPIC_RESPONSE}
 
     async def rewrite_query(self, state: AgentState) -> dict:
         query = state["query"]
