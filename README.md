@@ -1,62 +1,14 @@
 # RAG with Semantic Cache (Financial Compliance)
 
-## Architecture First
-
-```mermaid
-flowchart LR
-    U["User"] --> UI["Streamlit Chat UI"]
-    UI --> API["FastAPI /chat"]
-    API --> LG["LangGraph Workflow"]
-
-    LG --> RW["Query Rewrite"]
-    RW --> CACHE{"Semantic Cache Hit?"}
-
-    CACHE -- Yes --> HIT["Return Cached Answer"]
-    HIT --> RESP["Stream Answer"]
-
-    CACHE -- No --> RET["Hybrid Retrieval<br/>Pinecone"]
-    CACHE -- No --> MEM["Conversation History<br/>Postgres"]
-    RET --> LLM["LLM Answer Generation"]
-    MEM --> LLM
-    LLM --> STORE["Store in Semantic Cache"]
-    STORE --> RESP
-
-    INGEST["Document Ingestion Pipeline"] --> PINE["Pinecone Index"]
-    PINE --> RET
-```
-
-```mermaid
-flowchart TD
-    A["POST /chat"] --> B["Save user message"]
-    B --> C["Rewrite query"]
-    C --> D{"Cache hit?"}
-
-    D -- Yes --> E["Load cached answer"]
-    E --> F["Save assistant reply"]
-    F --> G["Stream response to client"]
-
-    D -- No --> H["Hybrid search in Pinecone"]
-    D -- No --> I["Fetch last 10 messages from Postgres"]
-    H --> J["Build grounded prompt"]
-    I --> J
-    J --> K["Generate final answer with LLM"]
-    K --> L["Save assistant reply"]
-    L --> M["Write answer to semantic cache"]
-    M --> G
-```
-
-```mermaid
-flowchart LR
-    DOCS["PDF Corpus"] --> LOAD["PyPDFLoader<br/>(page mode)"]
-    LOAD --> SPLIT["RecursiveCharacterTextSplitter"]
-    SPLIT --> DENSE["Dense Embeddings<br/>OpenAI text-embedding-3-small"]
-    SPLIT --> SPARSE["Sparse Embeddings<br/>SPLADE"]
-    DENSE --> UPSERT["Hybrid vector payload"]
-    SPARSE --> UPSERT
-    UPSERT --> INDEX["Pinecone upsert"]
-```
-
 This is a production-minded financial compliance RAG system that ingests regulatory PDFs, indexes them with hybrid retrieval, serves grounded answers over a streaming API, and speeds up repeated questions with semantic caching.
+
+<p align="center">
+  <img src="docs/images/system-design.svg" alt="System design overview for the financial compliance RAG system" width="1400">
+</p>
+
+<p align="center">
+  <img src="docs/images/request-flow.svg" alt="Runtime request flow showing cache-hit and cache-miss paths" width="1400">
+</p>
 
 ## Why This Project Is Interesting
 
@@ -102,6 +54,15 @@ This project currently includes:
 | Semantic cache | Redis LangCache |
 | Frontend | Streamlit |
 | Offline benchmark | 100-query retriever evaluation |
+
+## How the Corpus Is Indexed
+
+The ingestion side of the project is intentionally simple and production-friendly:
+
+- PDF files are loaded page-by-page from [`documents/`](documents/)
+- Text is split with a `1000` character chunk size and `200` character overlap
+- Each chunk gets both a dense embedding and a sparse embedding
+- The final hybrid vector payload is upserted into Pinecone for retrieval at runtime
 
 ## Core Design
 

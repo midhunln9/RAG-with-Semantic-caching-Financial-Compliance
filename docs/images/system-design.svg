@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1440" viewBox="0 0 1000 1440" role="img" aria-labelledby="title desc">
+  <title id="title">System Design Overview</title>
+  <desc id="desc">Large-format system design overview for the financial compliance RAG system with semantic cache, hybrid retrieval, Pinecone, Postgres, and document ingestion.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="14" markerHeight="14" refX="11" refY="7" orient="auto">
+      <path d="M 0 0 L 14 7 L 0 14 z" fill="#475569"/>
+    </marker>
+    <style>
+      .title { font: 700 42px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 500 22px 'Segoe UI', Arial, sans-serif; fill: #475569; }
+      .panel-title { font: 700 30px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .box-title { font: 700 28px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .box-text { font: 500 22px 'Segoe UI', Arial, sans-serif; fill: #334155; }
+      .chip-text { font: 600 22px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .note { font: 500 19px 'Segoe UI', Arial, sans-serif; fill: #475569; }
+    </style>
+  </defs>
+
+  <rect width="1000" height="1440" fill="url(#bg)"/>
+
+  <text x="500" y="64" text-anchor="middle" class="title">System Design Overview</text>
+  <text x="500" y="102" text-anchor="middle" class="subtitle">Financial compliance RAG with semantic cache, hybrid retrieval, and streaming answers</text>
+
+  <rect x="50" y="140" width="900" height="330" rx="28" fill="#eef4ff" stroke="#bfdbfe" stroke-width="2"/>
+  <text x="500" y="188" text-anchor="middle" class="panel-title">1. Client Layer</text>
+
+  <rect x="350" y="225" width="300" height="96" rx="20" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="500" y="279" text-anchor="middle" class="box-title">User</text>
+  <text x="500" y="307" text-anchor="middle" class="note">Compliance, legal, or regulatory question</text>
+
+  <rect x="280" y="350" width="440" height="110" rx="22" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="500" y="403" text-anchor="middle" class="box-title">Streamlit Chat UI</text>
+  <text x="500" y="434" text-anchor="middle" class="box-text">Interactive frontend for testing and demos</text>
+
+  <line x1="500" y1="321" x2="500" y2="350" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <rect x="50" y="510" width="900" height="380" rx="28" fill="#fff7ed" stroke="#fed7aa" stroke-width="2"/>
+  <text x="500" y="558" text-anchor="middle" class="panel-title">2. Application Layer</text>
+
+  <rect x="150" y="610" width="700" height="110" rx="22" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="500" y="662" text-anchor="middle" class="box-title">FastAPI `/chat`</text>
+  <text x="500" y="694" text-anchor="middle" class="box-text">Streaming API endpoint that returns answers incrementally</text>
+
+  <rect x="150" y="755" width="700" height="115" rx="22" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="500" y="802" text-anchor="middle" class="box-title">LangGraph Orchestrator</text>
+
+  <rect x="205" y="824" width="145" height="36" rx="12" fill="#fff7ed" stroke="#fdba74" stroke-width="2"/>
+  <rect x="372" y="824" width="145" height="36" rx="12" fill="#fff7ed" stroke="#fdba74" stroke-width="2"/>
+  <rect x="539" y="824" width="145" height="36" rx="12" fill="#fff7ed" stroke="#fdba74" stroke-width="2"/>
+  <rect x="706" y="824" width="89" height="36" rx="12" fill="#fff7ed" stroke="#fdba74" stroke-width="2"/>
+
+  <text x="277" y="848" text-anchor="middle" class="chip-text">Rewrite Query</text>
+  <text x="444" y="848" text-anchor="middle" class="chip-text">Check Cache</text>
+  <text x="611" y="848" text-anchor="middle" class="chip-text">Hybrid Search</text>
+  <text x="750" y="848" text-anchor="middle" class="chip-text">Answer</text>
+
+  <line x1="500" y1="460" x2="500" y2="610" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="500" y1="720" x2="500" y2="755" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <rect x="50" y="930" width="900" height="450" rx="28" fill="#effcf4" stroke="#bbf7d0" stroke-width="2"/>
+  <text x="500" y="978" text-anchor="middle" class="panel-title">3. Data and AI Layer</text>
+
+  <rect x="90" y="1035" width="370" height="110" rx="22" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="275" y="1087" text-anchor="middle" class="box-title">Semantic Cache</text>
+  <text x="275" y="1119" text-anchor="middle" class="box-text">Redis LangCache for repeated questions</text>
+
+  <rect x="540" y="1035" width="370" height="110" rx="22" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="725" y="1087" text-anchor="middle" class="box-title">LLM Providers</text>
+  <text x="725" y="1119" text-anchor="middle" class="box-text">OpenAI and NVIDIA generation backends</text>
+
+  <rect x="90" y="1180" width="370" height="115" rx="22" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="275" y="1232" text-anchor="middle" class="box-title">Pinecone Index</text>
+  <text x="275" y="1264" text-anchor="middle" class="box-text">Hybrid dense + sparse retrieval at runtime</text>
+
+  <rect x="540" y="1180" width="370" height="115" rx="22" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="725" y="1232" text-anchor="middle" class="box-title">Postgres</text>
+  <text x="725" y="1264" text-anchor="middle" class="box-text">Recent conversation history by session</text>
+
+  <rect x="210" y="1318" width="580" height="44" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="500" y="1347" text-anchor="middle" class="chip-text">Document ingestion: load PDFs → chunk text → embed → upsert into Pinecone</text>
+
+  <line x1="430" y1="870" x2="300" y2="1035" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="570" y1="870" x2="700" y2="1035" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="390" y1="870" x2="260" y2="1180" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="610" y1="870" x2="740" y2="1180" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="500" y1="1318" x2="315" y2="1295" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+</svg>
