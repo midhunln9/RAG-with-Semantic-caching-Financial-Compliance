@@ -1,10 +1,9 @@
 <p align="center">
-  <img src="docs/images/readme-hero.svg" alt="Visual summary of the Streaming RAG for Financial Compliance project">
+  <img src="docs/images/system-design.svg" alt="System architecture diagram highlighting guarded runtime, semantic cache, hybrid retrieval, and stateful memory">
 </p>
 
 <p align="center">
-  <img src="docs/images/system-design.svg" width="49%" alt="System architecture diagram for ingestion, retrieval, memory, cache, and serving">
-  <img src="docs/images/request-flow.svg" width="49%" alt="Runtime request lifecycle diagram showing guardrails, cache routing, retrieval, and answer generation">
+  <img src="docs/images/request-flow.svg" alt="Runtime request lifecycle diagram showing topic guardrails, semantic cache hit path, retrieval miss path, and streaming response">
 </p>
 
 # Streaming RAG for Financial Compliance

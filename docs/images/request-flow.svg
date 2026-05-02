@@ -1,88 +1,89 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1600 1090" role="img" aria-labelledby="title desc">
-  <title id="title">Streaming RAG Request Flow</title>
-  <desc id="desc">Simple request flow diagram showing cache-hit and cache-miss paths.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="780" viewBox="0 0 1600 1040" role="img" aria-labelledby="title desc">
+  <title id="title">Streaming RAG request flow</title>
+  <desc id="desc">Runtime path showing topic guardrails first, semantic cache lookup early, and retrieval only on cache miss.</desc>
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f8fbff"/>
-      <stop offset="100%" stop-color="#f8fafc"/>
+      <stop offset="0%" stop-color="#F8F5EE"/>
+      <stop offset="100%" stop-color="#F4EFE7"/>
     </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0f172a" flood-opacity="0.08"/>
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#10243B" flood-opacity="0.08"/>
     </filter>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#51616A"/>
     </marker>
     <style>
-      .title { font: 700 46px 'Avenir Next', 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
-      .subtitle { font: 500 22px 'Avenir Next', 'Segoe UI', Arial, sans-serif; fill: #475569; }
-      .panel { font: 700 18px 'Avenir Next', 'Segoe UI', Arial, sans-serif; letter-spacing: 2px; fill: #475569; }
-      .node { font: 700 22px 'Avenir Next', 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
-      .label { font: 600 17px 'Avenir Next', 'Segoe UI', Arial, sans-serif; fill: #334155; }
+      .title { font: 700 46px 'Iowan Old Style', 'Georgia', serif; fill: #10243B; }
+      .subtitle { font: 500 22px 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif; fill: #52636A; }
+      .panel { font: 700 18px 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif; letter-spacing: 2px; fill: #52636A; }
+      .node { font: 700 25px 'Iowan Old Style', 'Georgia', serif; fill: #10243B; }
+      .label { font: 600 17px 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif; fill: #55686F; }
+      .pill { font: 700 16px 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif; fill: #10243B; }
+      .nodeLight { font: 700 25px 'Iowan Old Style', 'Georgia', serif; fill: #F4EFE7; }
     </style>
   </defs>
 
-  <rect width="1600" height="1090" fill="url(#bg)"/>
+  <rect width="1600" height="1040" rx="36" fill="url(#bg)"/>
+  <rect x="20" y="20" width="1560" height="1000" rx="30" fill="none" stroke="#DDD3C7" stroke-width="2"/>
+  <circle cx="1458" cy="122" r="84" fill="#EADBC6" fill-opacity="0.62"/>
+  <circle cx="124" cy="900" r="64" fill="#D8EFE8"/>
 
-  <text x="800" y="78" text-anchor="middle" class="title">Streaming RAG Request Flow</text>
-  <text x="800" y="118" text-anchor="middle" class="subtitle">Simple cache-hit and cache-miss lifecycle</text>
+  <text x="800" y="86" text-anchor="middle" class="title">Streaming RAG Request Flow</text>
+  <text x="800" y="124" text-anchor="middle" class="subtitle">Guard first. Cache early. Retrieve only when needed.</text>
 
-  <rect x="80" y="200" width="1440" height="210" rx="34" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
-  <text x="115" y="242" class="panel">SHARED PATH</text>
+  <rect x="120" y="190" width="1360" height="220" rx="34" fill="#FFFFFF" stroke="#D8CEC0" stroke-width="2"/>
+  <text x="155" y="232" class="panel">CORE PATH</text>
 
-  <rect x="120" y="275" width="240" height="72" rx="22" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="420" y="275" width="240" height="72" rx="22" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="720" y="275" width="240" height="72" rx="22" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="1020" y="275" width="240" height="72" rx="22" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="150" y="264" width="180" height="66" rx="22" fill="#F8F4EC" stroke="#DDD3C7" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="390" y="254" width="240" height="82" rx="24" fill="#DDF4EE" stroke="#A9D7C9" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="690" y="264" width="200" height="66" rx="22" fill="#F8F4EC" stroke="#DDD3C7" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="950" y="254" width="250" height="82" rx="24" fill="#F6E9D7" stroke="#E7CAA0" stroke-width="2" filter="url(#shadow)"/>
+  <polygon points="1335,238 1435,296 1335,354 1235,296" fill="#10243B" stroke="#10243B" stroke-width="2"/>
 
-  <text x="240" y="319" text-anchor="middle" class="node">Receive Question</text>
-  <text x="540" y="319" text-anchor="middle" class="node">Save User Turn</text>
-  <text x="840" y="319" text-anchor="middle" class="node">Rewrite Query</text>
-  <text x="1140" y="319" text-anchor="middle" class="node">Cache Lookup</text>
+  <text x="240" y="305" text-anchor="middle" class="node">Prompt</text>
+  <text x="510" y="304" text-anchor="middle" class="node">Topic Guard</text>
+  <text x="790" y="305" text-anchor="middle" class="node">Rewrite</text>
+  <text x="1075" y="304" text-anchor="middle" class="node">Semantic Cache</text>
+  <text x="1335" y="305" text-anchor="middle" class="nodeLight">Hit?</text>
 
-  <line x1="360" y1="311" x2="420" y2="311" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="660" y1="311" x2="720" y2="311" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="960" y1="311" x2="1020" y2="311" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <line x1="330" y1="296" x2="390" y2="296" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="630" y1="296" x2="690" y2="296" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="890" y1="296" x2="950" y2="296" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="1200" y1="296" x2="1235" y2="296" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
 
-  <polygon points="1350,250 1450,311 1350,372 1250,311" fill="#fff7ed" stroke="#fdba74" stroke-width="3"/>
-  <text x="1350" y="304" text-anchor="middle" class="node">Cache Hit?</text>
+  <line x1="510" y1="336" x2="510" y2="356" stroke="#BA6A5E" stroke-width="3" stroke-dasharray="8 8"/>
+  <rect x="430" y="356" width="160" height="34" rx="17" fill="#F5DDD8" stroke="#DEB3AA" stroke-width="2"/>
+  <text x="510" y="378" text-anchor="middle" class="pill">Off-topic stop</text>
 
-  <line x1="1260" y1="311" x2="1250" y2="311" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <rect x="120" y="470" width="560" height="260" rx="34" fill="#ECFDF5" stroke="#B7E8CC" stroke-width="2"/>
+  <text x="155" y="512" class="panel">CACHE HIT</text>
+  <rect x="190" y="570" width="190" height="74" rx="22" fill="#FFFFFF" stroke="#CBE6D7" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="430" y="570" width="190" height="74" rx="22" fill="#FFFFFF" stroke="#CBE6D7" stroke-width="2" filter="url(#shadow)"/>
+  <text x="285" y="615" text-anchor="middle" class="node">Return Cached</text>
+  <text x="525" y="615" text-anchor="middle" class="node">Persist Reply</text>
+  <line x1="380" y1="607" x2="430" y2="607" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M 1335 354 C 1210 420 940 448 408 470" fill="none" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="965" y="416" class="label">yes</text>
 
-  <rect x="80" y="490" width="610" height="320" rx="34" fill="#ecfdf5" stroke="#86efac" stroke-width="2"/>
-  <text x="115" y="532" class="panel">CACHE HIT</text>
+  <rect x="920" y="470" width="560" height="360" rx="34" fill="#EFF6FF" stroke="#C3D8F2" stroke-width="2"/>
+  <text x="955" y="512" class="panel">CACHE MISS</text>
+  <rect x="980" y="560" width="190" height="74" rx="22" fill="#FFFFFF" stroke="#D6E4F4" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="1230" y="560" width="190" height="74" rx="22" fill="#FFFFFF" stroke="#D6E4F4" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="1105" y="670" width="190" height="74" rx="22" fill="#FFFFFF" stroke="#D6E4F4" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="1105" y="760" width="190" height="74" rx="22" fill="#F6E9D7" stroke="#E7CAA0" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1075" y="605" text-anchor="middle" class="node">Retrieve Docs</text>
+  <text x="1325" y="605" text-anchor="middle" class="node">Load History</text>
+  <text x="1200" y="715" text-anchor="middle" class="node">Grounded Answer</text>
+  <text x="1200" y="805" text-anchor="middle" class="node">Warm Cache</text>
+  <line x1="1075" y1="634" x2="1170" y2="670" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="1325" y1="634" x2="1230" y2="670" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="1200" y1="744" x2="1200" y2="760" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M 1335 354 C 1400 400 1390 432 1240 470" fill="none" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="1396" y="416" class="label">no</text>
 
-  <rect x="120" y="575" width="250" height="72" rx="22" fill="#ffffff" stroke="#bbf7d0" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="400" y="575" width="250" height="72" rx="22" fill="#ffffff" stroke="#bbf7d0" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="420" y="910" width="760" height="74" rx="26" fill="#FFFFFF" stroke="#D8CEC0" stroke-width="2" filter="url(#shadow)"/>
+  <text x="800" y="956" text-anchor="middle" class="node">Stream Response</text>
 
-  <text x="245" y="619" text-anchor="middle" class="node">Return Cached Answer</text>
-  <text x="525" y="619" text-anchor="middle" class="node">Save Assistant Turn</text>
-
-  <line x1="370" y1="611" x2="400" y2="611" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="1350" y1="372" x2="390" y2="490" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <text x="770" y="454" class="label">yes</text>
-
-  <rect x="910" y="490" width="610" height="430" rx="34" fill="#eff6ff" stroke="#93c5fd" stroke-width="2"/>
-  <text x="945" y="532" class="panel">CACHE MISS</text>
-
-  <rect x="950" y="575" width="230" height="72" rx="22" fill="#ffffff" stroke="#bfdbfe" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="1250" y="575" width="230" height="72" rx="22" fill="#ffffff" stroke="#bfdbfe" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="1100" y="690" width="230" height="72" rx="22" fill="#ffffff" stroke="#bfdbfe" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="1100" y="790" width="230" height="72" rx="22" fill="#ffffff" stroke="#bfdbfe" stroke-width="2" filter="url(#shadow)"/>
-
-  <text x="1065" y="619" text-anchor="middle" class="node">Retrieve Docs</text>
-  <text x="1365" y="619" text-anchor="middle" class="node">Load History</text>
-  <text x="1215" y="734" text-anchor="middle" class="node">Build Prompt</text>
-  <text x="1215" y="834" text-anchor="middle" class="node">Generate Answer</text>
-
-  <line x1="1065" y1="647" x2="1185" y2="690" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="1365" y1="647" x2="1245" y2="690" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="1215" y1="762" x2="1215" y2="790" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="1350" y1="372" x2="1215" y2="490" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <text x="1295" y="446" class="label">no</text>
-
-  <rect x="410" y="955" width="780" height="74" rx="26" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
-  <text x="800" y="1001" text-anchor="middle" class="node">Stream Response to Client</text>
-
-  <line x1="525" y1="647" x2="700" y2="955" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="1215" y1="862" x2="900" y2="955" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <line x1="525" y1="644" x2="700" y2="910" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="1200" y1="834" x2="900" y2="910" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
 </svg>

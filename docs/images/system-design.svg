@@ -1,103 +1,94 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1600 1015" role="img" aria-labelledby="title desc">
-  <title id="title">Streaming RAG System Design</title>
-  <desc id="desc">Simple flow diagram of the Streaming RAG system showing ingestion, serving, storage, and evaluation components.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1600 1010" role="img" aria-labelledby="title desc">
+  <title id="title">Streaming RAG system design</title>
+  <desc id="desc">Architecture view highlighting topic guardrails, semantic cache, retrieval, and stateful memory.</desc>
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f8fbff"/>
-      <stop offset="100%" stop-color="#f8fafc"/>
+      <stop offset="0%" stop-color="#F8F5EE"/>
+      <stop offset="100%" stop-color="#F4EFE7"/>
     </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0f172a" flood-opacity="0.08"/>
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#10243B" flood-opacity="0.08"/>
     </filter>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#51616A"/>
     </marker>
     <style>
-      .title { font: 700 46px 'Avenir Next', 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
-      .subtitle { font: 500 22px 'Avenir Next', 'Segoe UI', Arial, sans-serif; fill: #475569; }
-      .panel { font: 700 18px 'Avenir Next', 'Segoe UI', Arial, sans-serif; letter-spacing: 2px; fill: #475569; }
-      .node { font: 700 24px 'Avenir Next', 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
-      .chip { font: 700 18px 'Avenir Next', 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
-      .label { font: 600 17px 'Avenir Next', 'Segoe UI', Arial, sans-serif; fill: #334155; }
+      .title { font: 700 46px 'Iowan Old Style', 'Georgia', serif; fill: #10243B; }
+      .subtitle { font: 500 22px 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif; fill: #52636A; }
+      .panel { font: 700 18px 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif; letter-spacing: 2px; fill: #52636A; }
+      .big { font: 700 29px 'Iowan Old Style', 'Georgia', serif; fill: #10243B; }
+      .small { font: 600 17px 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif; fill: #55686F; }
+      .pill { font: 700 18px 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif; fill: #10243B; }
+      .pillLight { font: 700 18px 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif; fill: #F4EFE7; }
     </style>
   </defs>
 
-  <rect width="1600" height="1015" fill="url(#bg)"/>
+  <rect width="1600" height="1010" rx="36" fill="url(#bg)"/>
+  <rect x="20" y="20" width="1560" height="970" rx="30" fill="none" stroke="#DDD3C7" stroke-width="2"/>
+  <circle cx="1460" cy="130" r="86" fill="#EADBC6" fill-opacity="0.65"/>
+  <circle cx="128" cy="874" r="70" fill="#D8EFE8"/>
 
-  <text x="800" y="78" text-anchor="middle" class="title">Streaming RAG System Design</text>
-  <text x="800" y="118" text-anchor="middle" class="subtitle">Simple architecture flow</text>
+  <text x="800" y="86" text-anchor="middle" class="title">Streaming RAG System Design</text>
+  <text x="800" y="124" text-anchor="middle" class="subtitle">Guardrails and semantic cache sit in the core path, not on the side.</text>
 
-  <rect x="60" y="170" width="460" height="520" rx="34" fill="#eef6ff" stroke="#bfdbfe" stroke-width="2"/>
-  <rect x="570" y="170" width="460" height="520" rx="34" fill="#fff7ed" stroke="#fed7aa" stroke-width="2"/>
-  <rect x="1080" y="170" width="460" height="520" rx="34" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="2"/>
-  <rect x="60" y="740" width="1480" height="210" rx="34" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="90" y="190" width="390" height="540" rx="34" fill="#EFF6FF" stroke="#C3D8F2" stroke-width="2"/>
+  <rect x="605" y="190" width="390" height="540" rx="34" fill="#FFF7ED" stroke="#E9CF9E" stroke-width="2"/>
+  <rect x="1120" y="190" width="390" height="540" rx="34" fill="#ECFDF5" stroke="#B7E8CC" stroke-width="2"/>
 
-  <text x="95" y="212" class="panel">INGESTION</text>
-  <text x="605" y="212" class="panel">SERVING</text>
-  <text x="1115" y="212" class="panel">STATE + MODELS</text>
-  <text x="95" y="782" class="panel">EVALUATION</text>
+  <text x="125" y="232" class="panel">INGEST</text>
+  <text x="640" y="232" class="panel">GUARDED RUNTIME</text>
+  <text x="1155" y="232" class="panel">MEMORY + REUSE</text>
 
-  <rect x="100" y="255" width="380" height="78" rx="22" fill="#ffffff" stroke="#dbeafe" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="100" y="375" width="380" height="78" rx="22" fill="#ffffff" stroke="#dbeafe" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="100" y="495" width="380" height="78" rx="22" fill="#ffffff" stroke="#dbeafe" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="100" y="610" width="380" height="54" rx="18" fill="#ffffff" stroke="#dbeafe" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="130" y="286" width="310" height="90" rx="24" fill="#FFFFFF" stroke="#D6E4F4" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="130" y="408" width="310" height="90" rx="24" fill="#FFFFFF" stroke="#D6E4F4" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="130" y="530" width="310" height="90" rx="24" fill="#FFFFFF" stroke="#D6E4F4" stroke-width="2" filter="url(#shadow)"/>
+  <text x="285" y="341" text-anchor="middle" class="big">PDF Corpus</text>
+  <text x="285" y="463" text-anchor="middle" class="big">Chunk + Embed</text>
+  <text x="285" y="585" text-anchor="middle" class="big">Hybrid Index</text>
+  <line x1="285" y1="376" x2="285" y2="408" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="285" y1="498" x2="285" y2="530" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
 
-  <text x="290" y="303" text-anchor="middle" class="node">PDF Corpus</text>
-  <text x="290" y="423" text-anchor="middle" class="node">Chunking</text>
-  <text x="290" y="543" text-anchor="middle" class="node">Dense + Sparse Embeddings</text>
-  <text x="290" y="645" text-anchor="middle" class="node">Pinecone Index</text>
+  <rect x="645" y="268" width="310" height="82" rx="24" fill="#FFFFFF" stroke="#E8D0A1" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="645" y="382" width="310" height="100" rx="24" fill="#DDF4EE" stroke="#A9D7C9" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="645" y="514" width="310" height="100" rx="24" fill="#FFFFFF" stroke="#E8D0A1" stroke-width="2" filter="url(#shadow)"/>
+  <text x="800" y="318" text-anchor="middle" class="big">FastAPI</text>
+  <text x="800" y="437" text-anchor="middle" class="big">Topic Guard</text>
+  <text x="800" y="465" text-anchor="middle" class="small">Stops off-scope prompts early</text>
+  <text x="800" y="569" text-anchor="middle" class="big">LangGraph</text>
+  <text x="800" y="597" text-anchor="middle" class="small">Rewrite, route, and stream</text>
+  <line x1="800" y1="350" x2="800" y2="382" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="800" y1="482" x2="800" y2="514" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
 
-  <line x1="290" y1="333" x2="290" y2="375" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="290" y1="453" x2="290" y2="495" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="290" y1="573" x2="290" y2="610" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <rect x="716" y="642" width="168" height="44" rx="22" fill="#10243B"/>
+  <text x="800" y="670" text-anchor="middle" class="pillLight">Stream Answer</text>
 
-  <rect x="610" y="255" width="380" height="78" rx="22" fill="#ffffff" stroke="#fde68a" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="610" y="375" width="380" height="78" rx="22" fill="#ffffff" stroke="#fde68a" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="610" y="495" width="380" height="120" rx="22" fill="#ffffff" stroke="#fde68a" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="645" y="540" width="135" height="34" rx="17" fill="#fff7ed"/>
-  <rect x="805" y="540" width="150" height="34" rx="17" fill="#fff7ed"/>
-  <text x="712" y="562" text-anchor="middle" class="chip">Streamlit UI</text>
-  <text x="880" y="562" text-anchor="middle" class="chip">FastAPI /chat</text>
-  <rect x="610" y="635" width="380" height="54" rx="18" fill="#ffffff" stroke="#fde68a" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="1160" y="260" width="310" height="82" rx="22" fill="#FFFFFF" stroke="#CBE6D7" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="1160" y="366" width="310" height="82" rx="22" fill="#FFFFFF" stroke="#CBE6D7" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="1160" y="472" width="310" height="96" rx="22" fill="#F6E9D7" stroke="#E7CAA0" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="1160" y="592" width="310" height="82" rx="22" fill="#FFFFFF" stroke="#CBE6D7" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1315" y="312" text-anchor="middle" class="big">Pinecone</text>
+  <text x="1315" y="338" text-anchor="middle" class="small">Hybrid retrieval store</text>
+  <text x="1315" y="418" text-anchor="middle" class="big">Postgres</text>
+  <text x="1315" y="444" text-anchor="middle" class="small">Conversation memory</text>
+  <text x="1315" y="522" text-anchor="middle" class="big">LangCache</text>
+  <text x="1315" y="550" text-anchor="middle" class="small">Semantic answer reuse</text>
+  <text x="1315" y="644" text-anchor="middle" class="big">LLMs</text>
+  <text x="1315" y="670" text-anchor="middle" class="small">Grounded answer models</text>
 
-  <text x="800" y="303" text-anchor="middle" class="node">User</text>
-  <text x="800" y="423" text-anchor="middle" class="node">LangGraph Workflow</text>
-  <text x="800" y="673" text-anchor="middle" class="node">Streaming Response</text>
+  <path d="M 955 564 C 1035 564 1070 302 1160 302" fill="none" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M 955 564 C 1040 564 1068 408 1160 408" fill="none" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M 955 564 C 1040 564 1068 520 1160 520" fill="none" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M 955 564 C 1040 564 1068 634 1160 634" fill="none" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M 440 575 C 535 575 560 564 645 564" fill="none" stroke="#51616A" stroke-width="4" marker-end="url(#arrow)"/>
 
-  <line x1="800" y1="333" x2="800" y2="375" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="800" y1="453" x2="800" y2="495" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="800" y1="615" x2="800" y2="635" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-
-  <rect x="1120" y="255" width="380" height="78" rx="22" fill="#ffffff" stroke="#bbf7d0" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="1120" y="375" width="380" height="78" rx="22" fill="#ffffff" stroke="#bbf7d0" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="1120" y="495" width="380" height="78" rx="22" fill="#ffffff" stroke="#bbf7d0" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="1120" y="610" width="380" height="54" rx="18" fill="#ffffff" stroke="#bbf7d0" stroke-width="2" filter="url(#shadow)"/>
-
-  <text x="1310" y="303" text-anchor="middle" class="node">Semantic Cache</text>
-  <text x="1310" y="423" text-anchor="middle" class="node">Postgres Memory</text>
-  <text x="1310" y="543" text-anchor="middle" class="node">LLM Providers</text>
-  <text x="1310" y="645" text-anchor="middle" class="node">OpenAI + NVIDIA</text>
-
-  <path d="M 990 420 C 1050 420 1060 294 1120 294" fill="none" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <path d="M 990 430 C 1060 430 1060 414 1120 414" fill="none" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <path d="M 990 440 C 1060 440 1060 534 1120 534" fill="none" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <path d="M 480 637 C 560 637 560 430 610 430" fill="none" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-
-  <rect x="100" y="820" width="250" height="64" rx="22" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="400" y="820" width="250" height="64" rx="22" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="700" y="820" width="250" height="64" rx="22" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="1000" y="820" width="250" height="64" rx="22" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
-  <rect x="1300" y="803" width="180" height="98" rx="22" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
-
-  <text x="225" y="859" text-anchor="middle" class="node">Sample Chunks</text>
-  <text x="525" y="859" text-anchor="middle" class="node">Generate Queries</text>
-  <text x="825" y="859" text-anchor="middle" class="node">Run Retriever</text>
-  <text x="1125" y="859" text-anchor="middle" class="node">Score with ranx</text>
-  <text x="1390" y="845" text-anchor="middle" class="node">Metrics</text>
-  <text x="1390" y="876" text-anchor="middle" class="label">MRR, nDCG, Hit Rate</text>
-
-  <line x1="350" y1="852" x2="400" y2="852" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="650" y1="852" x2="700" y2="852" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="950" y1="852" x2="1000" y2="852" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
-  <line x1="1250" y1="852" x2="1300" y2="852" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <rect x="90" y="780" width="1420" height="150" rx="34" fill="#FFFFFF" stroke="#D8CEC0" stroke-width="2"/>
+  <text x="125" y="820" class="panel">SPECIALTIES</text>
+  <rect x="130" y="846" width="280" height="50" rx="18" fill="#DDF4EE" stroke="#B8DED2" stroke-width="2"/>
+  <rect x="450" y="846" width="280" height="50" rx="18" fill="#F6E9D7" stroke="#E7CAA0" stroke-width="2"/>
+  <rect x="770" y="846" width="280" height="50" rx="18" fill="#EEF6FF" stroke="#C3D8F2" stroke-width="2"/>
+  <rect x="1090" y="846" width="280" height="50" rx="18" fill="#F4EFE7" stroke="#DDD3C7" stroke-width="2"/>
+  <text x="270" y="878" text-anchor="middle" class="pill">Topic Guardrails</text>
+  <text x="590" y="878" text-anchor="middle" class="pill">Semantic Cache</text>
+  <text x="910" y="878" text-anchor="middle" class="pill">Hybrid Retrieval</text>
+  <text x="1230" y="878" text-anchor="middle" class="pill">Stateful Chat</text>
 </svg>
