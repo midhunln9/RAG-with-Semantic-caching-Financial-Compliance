@@ -1,102 +1,86 @@
-# RAG with Semantic Cache (Financial Compliance)
+# Streaming RAG for Financial Compliance
 
-This is a production-minded financial compliance RAG system that ingests regulatory PDFs, indexes them with hybrid retrieval, serves grounded answers over a streaming API, and speeds up repeated questions with semantic caching.
+Production-minded Retrieval-Augmented Generation system for financial compliance and regulatory research. This repository ingests a local corpus of SEBI and related securities-market PDFs, indexes them with hybrid dense and sparse retrieval, serves grounded answers over a streaming FastAPI API, and short-circuits repeated questions with semantic caching.
+
+The codebase is organized around four workflows:
+
+- Offline PDF ingestion and chunking
+- Online question answering with LangGraph orchestration
+- Semantic answer caching for repeated or near-duplicate requests
+- Offline retriever evaluation with reproducible benchmark artifacts
 
 <p align="center">
-  <img src="docs/images/system-design.svg" alt="System design overview for the financial compliance RAG system" width="1400">
+  <img src="docs/images/system-design.svg" alt="Architecture overview showing ingestion, serving, storage, and evaluation layers for the financial compliance RAG system">
 </p>
+<p align="center"><em>Architecture overview: what gets indexed offline, what happens during a live request, and which systems hold retrieval, memory, and cache state.</em></p>
 
-<p align="center">
-  <img src="docs/images/request-flow.svg" alt="Runtime request flow showing cache-hit and cache-miss paths" width="1400">
-</p>
+## Why This Repository Matters
 
-## Why This Project Is Interesting
-
-This repository is more than a chatbot demo. It is a complete Retrieval-Augmented Generation system built for financial compliance use cases, especially over SEBI and related securities-market documents.
-
-What makes it stand out:
-
-- Hybrid retrieval combines dense and sparse embeddings, which is a better fit for regulation-heavy text than dense-only search
-- Query rewriting happens before cache lookup, improving both retrieval quality and cache reuse
-- Semantic caching reduces repeated LLM work for equivalent or near-equivalent questions
-- Conversation history is persisted in Postgres so follow-up questions stay contextual
-- Responses are streamed from FastAPI for a better interactive experience
-- The retriever is evaluated offline with saved benchmark artifacts instead of only manual testing
-
-## What This Repository Implements
-
-This project currently includes:
-
-- A PDF ingestion pipeline for financial and regulatory documents
-- Chunking with overlap for better retrieval continuity
-- Hybrid search on Pinecone using OpenAI dense embeddings and SPLADE sparse embeddings
-- A LangGraph-based orchestration layer for rewrite, cache, retrieval, memory, and answer generation
-- Multi-provider LLM support through a strategy layer for `openai` and `nvidia`
-- Semantic answer caching through Redis LangCache
-- Session-based conversation memory in Postgres
-- A streaming FastAPI backend
-- A Streamlit chat interface for local usage
-- An offline 4-stage retriever evaluation pipeline with `ranx`
-- Dockerfiles for backend and frontend packaging
+- It uses hybrid retrieval, which is a better fit for regulation-heavy text than dense-only search.
+- It rewrites the user query before cache lookup, improving both retrieval quality and cache reuse.
+- It treats semantic caching as a first-class performance layer instead of an afterthought.
+- It persists session history in Postgres, so follow-up questions can stay contextual.
+- It streams answers from FastAPI for a more responsive chat experience.
+- It includes an offline evaluation pipeline, so retrieval quality is measured instead of assumed.
 
 ## Project Snapshot
 
 | Area | Detail |
 | --- | --- |
-| Domain | Financial compliance / regulatory QA |
-| Corpus | 41 PDF documents in [`documents/`](documents/) |
+| Domain | Financial compliance and regulatory question answering |
+| Corpus | 41 PDF documents in `documents/` |
 | Backend | FastAPI |
-| Workflow orchestration | LangGraph |
-| Vector store | Pinecone |
+| Orchestration | LangGraph |
+| Retrieval | Hybrid dense + sparse search in Pinecone |
 | Dense embeddings | OpenAI `text-embedding-3-small` |
 | Sparse embeddings | `naver/splade-cocondenser-ensembledistil` |
+| LLM providers | OpenAI `gpt-4o-mini` and NVIDIA `meta/llama-3.3-70b-instruct` |
 | Conversation memory | Postgres via `asyncpg` |
 | Semantic cache | Redis LangCache |
 | Frontend | Streamlit |
-| Offline benchmark | 100-query retriever evaluation |
+| Evaluation | 4-stage retriever benchmark with `ranx` |
 
-## How the Corpus Is Indexed
+## What the System Actually Does
 
-The ingestion side of the project is intentionally simple and production-friendly:
+### 1. Offline ingestion
 
-- PDF files are loaded page-by-page from [`documents/`](documents/)
-- Text is split with a `1000` character chunk size and `200` character overlap
-- Each chunk gets both a dense embedding and a sparse embedding
-- The final hybrid vector payload is upserted into Pinecone for retrieval at runtime
+The ingestion pipeline in `DocumentIngestion/` loads every PDF in `documents/`, reads each file page by page, splits the text into `1000`-character chunks with `200`-character overlap, generates both dense and sparse representations, and upserts the hybrid vectors into Pinecone.
 
-## Core Design
+### 2. Online request handling
 
-### 1. Query Rewrite Before Retrieval
+The serving path starts in the Streamlit client, reaches FastAPI through `POST /chat`, and is orchestrated by a LangGraph workflow. The graph rewrites the incoming query, checks semantic cache, retrieves relevant documents on cache miss, loads recent conversation history, and generates the final answer with the selected LLM.
 
-The system first rewrites the user's question into a cleaner retrieval-friendly query. That rewritten query then becomes the basis for cache lookup and retrieval, which helps normalize similar user phrasing.
+### 3. Stateful conversations
 
-### 2. Semantic Cache in Front of Full RAG
+Every user turn is stored before downstream work begins. On later turns, the backend reloads recent session history from Postgres and injects it into the grounded answer prompt so follow-up questions remain coherent.
 
-If the rewritten query has already been answered, the system can return the cached answer immediately instead of re-running retrieval and generation. This is the core performance differentiator of the project.
+### 4. Optional semantic cache
 
-### 3. Hybrid Retrieval for Compliance Text
+When LangCache is configured, the rewritten query becomes the cache key. If a semantically equivalent question has already been answered for the same model namespace, the system can return the cached answer immediately and skip retrieval and generation work.
 
-Financial and regulatory documents often need both semantic understanding and exact terminology matching. This project uses:
+## Request Lifecycle
 
-- Dense embeddings for semantic similarity
-- Sparse embeddings for keyword-sensitive retrieval
+<p align="center">
+  <img src="docs/images/request-flow.svg" alt="Runtime request lifecycle with shared preprocessing, cache-hit fast path, and cache-miss grounded RAG path">
+</p>
+<p align="center"><em>Request lifecycle: the query is normalized before cache lookup, then routed either to a low-latency cache-hit branch or to the full grounded RAG branch.</em></p>
 
-That combination is especially useful for queries involving circulars, obligations, penalties, reporting rules, and regulatory definitions.
+Read the request flow like this:
 
-### 4. Stateful Conversations
-
-The backend stores messages per `session_id` in Postgres and replays recent history into the final-answer prompt. That makes the assistant usable for multi-turn compliance research, not just isolated one-shot questions.
+- Shared preprocessing happens first for every request: accept the question, save the user turn, rewrite the query, and check cache.
+- Cache-hit requests return immediately after loading the cached answer and persisting the assistant reply.
+- Cache-miss requests fan out into retrieval and history loading, then join for grounded answer generation and cache write-back.
 
 ## Retrieval Evaluation
 
-The repository includes a reproducible evaluation workflow under [`offline_retriever_eval/`](offline_retriever_eval/):
+The repository includes a reproducible benchmark workflow under `offline_retriever_eval/`:
 
-1. Sample 100 chunks from Pinecone
-2. Generate user-style queries for those chunks
-3. Run the hybrid retriever
-4. Score the run with `ranx`
+1. Sample 100 indexed chunks from Pinecone.
+2. Generate realistic user-style queries for those chunks.
+3. Run the hybrid retriever against the generated queries.
+4. Score the results with `ranx`.
 
-Latest checked-in metrics from [`offline_retriever_eval/GoldenDataset/retrieval_metrics.csv`](offline_retriever_eval/GoldenDataset/retrieval_metrics.csv):
+Latest checked-in metrics from `offline_retriever_eval/GoldenDataset/retrieval_metrics.csv`:
 
 | Metric | Value |
 | --- | ---: |
@@ -110,36 +94,36 @@ Latest checked-in metrics from [`offline_retriever_eval/GoldenDataset/retrieval_
 | `map@10` | `0.9413` |
 | `ndcg@10` | `0.9556` |
 
-Why `precision@10` looks low: the current benchmark treats the originating chunk as the only relevant document per query, so even a perfect top-10 result naturally caps precision at `0.10`. In this setup, `hit_rate`, `MRR`, `recall`, and `nDCG` are more informative.
+`precision@10` appears low because the current qrels treat the originating chunk as the only relevant result for each generated query. In that benchmark design, a perfect top-10 result list naturally caps `precision@10` at `0.10`, so `hit_rate`, `MRR`, `recall`, and `nDCG` are the more meaningful signals.
 
-## Repository Structure
+## Repository Layout
 
 ```text
 .
-├── app/                       # FastAPI app and routes
-├── rag_src/                   # RAG workflow, nodes, prompts, repositories, LLM strategies
-├── DocumentIngestion/         # Ingestion and chunking pipeline
-├── offline_retriever_eval/    # Retriever benchmark workflow and artifacts
-├── streamlit_chat_ui/         # Streamlit frontend
+├── app/                       # FastAPI app and API routes
+├── rag_src/                   # LangGraph workflow, nodes, prompts, LLMs, repositories
+├── DocumentIngestion/         # PDF loading, chunking, and upsert pipeline
+├── offline_retriever_eval/    # Benchmark stages and saved evaluation artifacts
+├── streamlit_chat_ui/         # Local Streamlit chat client
 ├── documents/                 # Financial compliance PDF corpus
-├── Dockerfile.backend         # Backend image
-├── Dockerfile.frontend        # Frontend image
-├── pyproject.toml             # Dependency groups and project metadata
+├── docs/images/               # README architecture diagrams
+├── Dockerfile.backend         # Backend container image
+├── Dockerfile.frontend        # Frontend container image
 └── README.md
 ```
 
 ## Important Files
 
-- [`app/main.py`](app/main.py): FastAPI app startup and dependency wiring
-- [`app/routes/chat.py`](app/routes/chat.py): streaming `/chat` endpoint
-- [`rag_src/graph.py`](rag_src/graph.py): LangGraph workflow definition
-- [`rag_src/nodes.py`](rag_src/nodes.py): rewrite, cache, retrieval, memory, and answer nodes
-- [`rag_src/services.py`](rag_src/services.py): orchestration service layer
-- [`rag_src/repositories/pinecone_repository.py`](rag_src/repositories/pinecone_repository.py): hybrid Pinecone retrieval and upsert logic
-- [`rag_src/repositories/conversation_db.py`](rag_src/repositories/conversation_db.py): Postgres-backed conversation store
-- [`rag_src/repositories/lang_cache.py`](rag_src/repositories/lang_cache.py): Redis LangCache adapter
-- [`DocumentIngestion/main.py`](DocumentIngestion/main.py): ingestion pipeline entry point
-- [`streamlit_chat_ui/app.py`](streamlit_chat_ui/app.py): local chat UI
+- `app/main.py`: application startup, dependency wiring, and graph initialization
+- `app/routes/chat.py`: streaming `/chat` endpoint
+- `rag_src/graph.py`: LangGraph topology and cache-hit/cache-miss routing
+- `rag_src/nodes.py`: query rewrite, cache, retrieval, memory, and answer-generation nodes
+- `rag_src/repositories/pinecone_repository.py`: hybrid Pinecone retrieval and upsert logic
+- `rag_src/repositories/conversation_db.py`: Postgres-backed conversation storage
+- `rag_src/repositories/lang_cache.py`: Redis LangCache integration
+- `DocumentIngestion/main.py`: ingestion entrypoint
+- `offline_retriever_eval/stage1_get_chunks.py` to `stage4_ranx_evaluation.py`: evaluation pipeline
+- `streamlit_chat_ui/app.py`: Streamlit chat interface
 
 ## Quick Start
 
@@ -147,29 +131,33 @@ Why `precision@10` looks low: the current benchmark treats the originating chunk
 
 - Python `3.12`
 - `uv`
-- Postgres
 - Pinecone account and API key
 - OpenAI API key
 - NVIDIA API key
-- Optional LangCache credentials for semantic caching
+- Postgres instance
+- Optional LangCache credentials for semantic cache
 
 ### Environment Variables
 
+Set the following before running ingestion or the backend:
+
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `OPENAI_API_KEY` | Yes | Dense embeddings and OpenAI-backed LLM workflow |
-| `PINECONE_API_KEY` | Yes | Pinecone access |
-| `DATABASE_URL` | Yes | Postgres connection for conversation history |
-| `NVIDIA_API_KEY` | Yes | NVIDIA-backed LLM workflow |
-| `LANGCACHE_API_KEY` | No | Semantic cache API key |
-| `LANGCACHE_SERVER_URL` | No | Semantic cache backend URL |
+| `OPENAI_API_KEY` | Yes | Dense embeddings and OpenAI-backed answer path |
+| `NVIDIA_API_KEY` | Yes | NVIDIA-backed answer path |
+| `PINECONE_API_KEY` | Yes | Pinecone index access |
+| `DATABASE_URL` | Yes | Postgres connection string for conversation memory |
 | `LANGCACHE_CACHE_ID` | No | Semantic cache identifier |
-| `LANGCACHE_TTL_SECONDS` | No | Cache TTL override |
-| `LANGCACHE_FAILURE_COOLDOWN_SECONDS` | No | Cache failure cooldown |
-| `DATABASE_POOL_MIN_SIZE` | No | Postgres pool minimum |
-| `DATABASE_POOL_MAX_SIZE` | No | Postgres pool maximum |
+| `LANGCACHE_API_KEY` | No | Semantic cache API key |
+| `LANGCACHE_SERVER_URL` | No | Optional LangCache server URL override |
+| `LANGCACHE_TTL_SECONDS` | No | Cache TTL override, default `900` |
+| `LANGCACHE_FAILURE_COOLDOWN_SECONDS` | No | Cache backend failure cooldown, default `300` |
+| `DATABASE_POOL_MIN_SIZE` | No | Postgres pool minimum, default `1` |
+| `DATABASE_POOL_MAX_SIZE` | No | Postgres pool maximum, default `10` |
+| `BACKEND_CHAT_URL` | Frontend only | Streamlit backend target, default `http://127.0.0.1:8000/chat` |
 
-Note: the backend currently initializes both `openai` and `nvidia` workflows at startup, so both provider keys should be set in the current implementation.
+> [!IMPORTANT]
+> In the current implementation, backend startup initializes both `openai` and `nvidia` graphs. That means both provider keys should be present even if you plan to use only one provider at request time.
 
 ### Install Dependencies
 
@@ -177,19 +165,18 @@ Note: the backend currently initializes both `openai` and `nvidia` workflows at 
 uv sync
 ```
 
-### Ingest the Documents
+### Ingest the Corpus
 
 ```bash
 uv run python DocumentIngestion/main.py
 ```
 
-This pipeline:
+This job:
 
-- Reads PDF files from [`documents/`](documents/)
-- Loads them page-by-page
-- Splits them into overlapping chunks
-- Generates dense and sparse embeddings
-- Upserts hybrid vectors into Pinecone
+- loads PDFs from `documents/`
+- chunks them with overlap
+- generates dense and sparse embeddings
+- upserts hybrid vectors into Pinecone
 
 ### Run the Backend
 
@@ -207,6 +194,8 @@ Then open [http://127.0.0.1:8501](http://127.0.0.1:8501).
 
 ## Docker
 
+The repository ships separate backend and frontend images.
+
 ### Build
 
 ```bash
@@ -214,13 +203,13 @@ docker build -f Dockerfile.backend -t rag-semantic-cache-backend .
 docker build -f Dockerfile.frontend -t rag-semantic-cache-frontend .
 ```
 
-### Run Backend
+### Run the Backend Container
 
 ```bash
 docker run --rm --env-file .env -p 8000:8000 rag-semantic-cache-backend
 ```
 
-### Run Frontend
+### Run the Frontend Container
 
 ```bash
 docker run --rm -e BACKEND_CHAT_URL=http://host.docker.internal:8000/chat -p 8501:8501 rag-semantic-cache-frontend
@@ -249,34 +238,24 @@ Accepted `llm` values:
 
 Behavior:
 
-- Streams the answer as plain text
-- Uses recent session history for continuity
-- Returns cached answers when a semantic cache hit is found
+- response body is streamed as plain text
+- recent conversation history is used for continuity
+- cached answers are returned immediately when semantic cache hits
 
-## Why I Built It This Way
+## Implementation Notes
 
-- Financial compliance queries are terminology-heavy, so hybrid retrieval is a better fit than dense-only search
-- Repeated regulatory questions are common, so semantic caching gives a real latency and cost advantage
-- Compliance workflows are often iterative, so persistent conversation history matters
-- Streaming improves perceived responsiveness, especially when generation takes longer than retrieval
-- Evaluation artifacts make the project more credible than a demo that only "looks good" interactively
+- The Streamlit UI currently exposes `nvidia` in `AVAILABLE_LLMS`, while the API itself supports both `nvidia` and `openai`.
+- The backend stores raw conversation turns in Postgres with lightweight role prefixes and rehydrates them into LangChain message types at read time.
+- The backend Docker image packages serving code only; ingestion and evaluation continue to run from the Python workspace.
 
-## Next Steps
+## Suggested Next Steps
 
-Strong next improvements for this codebase would be:
-
-- Add citations with source file and page references in final answers
-- Add automated tests for graph nodes, repositories, and API behavior
-- Add a `docker-compose.yml` for one-command local startup
-- Lazy-load LLM providers so the backend can boot with only one configured
-- Add observability around latency, cache hit rate, and retrieval quality over time
+- Add citations with source filename and page number in the final answer.
+- Add automated tests for nodes, repositories, and API behavior.
+- Add one-command local orchestration with `docker compose`.
+- Lazy-load LLM workflows so the backend can boot with a single configured provider.
+- Add runtime observability for latency, cache hit rate, and retrieval quality.
 
 ## Summary
 
-If someone lands on this repository, the story should be immediately clear:
-
-- this is a real RAG system, not a notebook prototype
-- it is built for financial compliance document intelligence
-- semantic caching is a first-class part of the design
-- retrieval quality has been measured, not guessed
-- the architecture is modular enough to evolve into a production service
+This repository is not a notebook demo. It is a modular RAG system for financial compliance research with a clear ingestion path, a measurable retriever, a streaming answer API, persistent conversation state, and a semantic cache layer that meaningfully improves repeat-query performance.
