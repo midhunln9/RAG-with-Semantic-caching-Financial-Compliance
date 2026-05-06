@@ -10,6 +10,8 @@
 
 End-to-end Retrieval-Augmented Generation system for financial compliance and regulatory research. The project ingests SEBI and related securities-market PDFs, indexes them with hybrid dense and sparse retrieval, serves grounded answers over a streaming FastAPI API, stores conversational context in Postgres, and optionally skips repeat work through semantic caching.
 
+For implementation-level details, see [docs/TECHNICAL_DOCUMENTATION.md](docs/TECHNICAL_DOCUMENTATION.md).
+
 <p align="center">
   <img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-0B3D91?style=flat-square">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-Streaming_API-0F766E?style=flat-square">
